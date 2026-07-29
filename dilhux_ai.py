@@ -478,7 +478,9 @@ print(
 
 
 
-app.run_polling()from flask import Flask
+app.run_polling()
+
+from flask import Flask
 from threading import Thread
 import os
 
