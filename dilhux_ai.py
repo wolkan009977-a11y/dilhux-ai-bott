@@ -1,14 +1,18 @@
-# ==========================
-# DILHUX AI PRO V2
-# Arabic AI Assistant
-# ==========================
+# =====================================
+# DILHUX AI PRO V3
+# Smart Telegram AI Assistant
+# =====================================
 
-import requests
-import json
 import os
+import json
+import requests
 from datetime import datetime
+from threading import Thread
 
-from telegram import Update, ReplyKeyboardMarkup
+from flask import Flask
+
+from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
+
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -22,11 +26,11 @@ from telegram.ext import (
 # SETTINGS
 # ==========================
 
-TELEGRAM_TOKEN = "8606696347:AAFM_hLL4iQRBOpobGSs9DB4_MEZYHNUTUM"
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
-GROQ_KEY = "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"
+GROQ_API_KEY = os.getenv("GROQ_API_KEY")
 
-ADMIN_ID =7768895580
+ADMIN_ID = int(os.getenv("ADMIN_ID", "0"))
 
 
 # ==========================
@@ -38,14 +42,13 @@ MEMORY_FILE = "memory.json"
 BANNED_FILE = "banned.json"
 
 
+def load_data(file):
 
-def load_file(name):
-
-    if os.path.exists(name):
+    if os.path.exists(file):
 
         try:
             with open(
-                name,
+                file,
                 "r",
                 encoding="utf-8"
             ) as f:
@@ -57,11 +60,10 @@ def load_file(name):
     return {}
 
 
-
-def save_file(name, data):
+def save_data(file, data):
 
     with open(
-        name,
+        file,
         "w",
         encoding="utf-8"
     ) as f:
@@ -74,22 +76,17 @@ def save_file(name, data):
         )
 
 
+users = load_data(USERS_FILE)
 
-users = load_file(USERS_FILE)
+memory = load_data(MEMORY_FILE)
 
-memory = load_file(MEMORY_FILE)
+banned = load_data(BANNED_FILE)
 
-banned = load_file(BANNED_FILE)
-
-broadcast_mode = {}
-
-
-
-# ==========================
+broadcast_mode = {}# ==========================
 # MENU
 # ==========================
 
-def menu(uid):
+def menu():
 
     buttons = [
 
@@ -99,21 +96,22 @@ def menu(uid):
 
     ]
 
-
     return ReplyKeyboardMarkup(
         buttons,
         resize_keyboard=True
     )
 
 
-
 # ==========================
 # START
 # ==========================
 
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def start(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+):
 
-    user = update.message.from_user
+    user = update.effective_user
 
     uid = str(user.id)
 
@@ -122,12 +120,14 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
         "name": user.first_name,
 
-        "date": str(datetime.now())
+        "username": user.username,
+
+        "join_date": str(datetime.now())
 
     }
 
 
-    save_file(
+    save_data(
         USERS_FILE,
         users
     )
@@ -136,19 +136,29 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(
 
         "مرحبا بك 👋\n\n"
-        "أنا DILHUX AI PRO 🤖\n"
-        "مساعد ذكاء اصطناعي.\n"
-        "أجب باللغة العربية فقط.",
 
-        reply_markup=menu(user.id)
+        "🤖 أنا DILHUX AI PRO V3\n"
 
-    )# ==========================
+        "مساعد ذكاء اصطناعي ذكي.\n\n"
+
+        "يمكنك التحدث معي الآن.",
+
+        reply_markup=menu()
+
+    )
+
+
+# ==========================
 # ADMIN PANEL
 # ==========================
 
-async def admin_panel(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def admin_panel(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+):
 
-    uid = update.message.from_user.id
+    uid = update.effective_user.id
+
 
     if uid != ADMIN_ID:
 
@@ -161,51 +171,58 @@ async def admin_panel(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     await update.message.reply_text(
 
-        "👑 Admin Panel\n\n"
-        "/stats - إحصائيات\n"
-        "/users - المستخدمون\n"
-        "/broadcast - إرسال للجميع"
+        "👑 DILHUX ADMIN PANEL\n\n"
 
-    )
+        "📊 /stats - الإحصائيات\n"
 
+        "👥 /users - قائمة المستخدمين\n"
 
+        "📢 /broadcast - إرسال للجميع\n"
 
-# ==========================
+        "🚫 /ban ID - حظر مستخدم\n"
+
+        "✅ /unban ID - فك الحظر"
+
+    )# ==========================
 # STATS
 # ==========================
 
-async def stats(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def stats(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+):
 
-    uid = update.message.from_user.id
-
+    uid = update.effective_user.id
 
     if uid != ADMIN_ID:
-
         return
 
 
     await update.message.reply_text(
 
-        "📊 DILHUX AI PRO\n\n"
+        "📊 DILHUX AI PRO V3\n\n"
+
         f"👥 Users: {len(users)}\n"
-        f"🧠 Memory: {len(memory)}\n"
+
+        f"🧠 Memory Users: {len(memory)}\n"
+
         f"🚫 Banned: {len(banned)}"
 
     )
 
 
-
 # ==========================
-# USERS
+# USERS LIST
 # ==========================
 
-async def users_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def users_list(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+):
 
-    uid = update.message.from_user.id
-
+    uid = update.effective_user.id
 
     if uid != ADMIN_ID:
-
         return
 
 
@@ -215,53 +232,142 @@ async def users_list(update: Update, context: ContextTypes.DEFAULT_TYPE):
     for user_id, data in users.items():
 
         text += (
+
             f"🆔 {user_id}\n"
-            f"👤 {data.get('name','Unknown')}\n\n"
+
+            f"👤 {data.get('name','Unknown')}\n"
+
+            f"📅 {data.get('join_date','')}\n\n"
+
         )
 
 
-    await update.message.reply_text(text)
-
+    await update.message.reply_text(text[:4000])
 
 
 # ==========================
-# BROADCAST START
+# BROADCAST
 # ==========================
 
-async def broadcast_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def broadcast(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+):
 
-    uid = str(update.message.from_user.id)
+    uid = update.effective_user.id
 
-
-    if int(uid) != ADMIN_ID:
-
+    if uid != ADMIN_ID:
         return
 
 
-    broadcast_mode[uid] = True
+    broadcast_mode[str(uid)] = True
 
 
     await update.message.reply_text(
 
-        "📢 اكتب الرسالة التي تريد إرسالها للجميع."
+        "📢 اكتب الرسالة الآن وسأرسلها للجميع."
 
     )
 
 
+# ==========================
+# BAN USER
+# ==========================
+
+async def ban(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+):
+
+    uid = update.effective_user.id
+
+    if uid != ADMIN_ID:
+        return
+
+
+    if not context.args:
+
+        await update.message.reply_text(
+            "اكتب ID المستخدم."
+        )
+
+        return
+
+
+    user_id = context.args[0]
+
+
+    banned[user_id] = True
+
+
+    save_data(
+        BANNED_FILE,
+        banned
+    )
+
+
+    await update.message.reply_text(
+
+        f"🚫 تم حظر المستخدم {user_id}"
+
+    )
+
 
 # ==========================
+# UNBAN USER
+# ==========================
+
+async def unban(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+):
+
+    uid = update.effective_user.id
+
+    if uid != ADMIN_ID:
+        return
+
+
+    if not context.args:
+
+        await update.message.reply_text(
+            "اكتب ID المستخدم."
+        )
+
+        return
+
+
+    user_id = context.args[0]
+
+
+    if user_id in banned:
+
+        del banned[user_id]
+
+
+    save_data(
+        BANNED_FILE,
+        banned
+    )
+
+
+    await update.message.reply_text(
+
+        f"✅ تم فك الحظر عن {user_id}"# ==========================
 # AI CHAT
 # ==========================
 
-async def ai_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
+async def ai_chat(
+    update: Update,
+    context: ContextTypes.DEFAULT_TYPE
+):
 
-    uid = str(update.message.from_user.id)
+    uid = str(update.effective_user.id)
 
     text = update.message.text
 
 
-
-    # BROADCAST
+    # Broadcast mode
 
     if broadcast_mode.get(uid):
 
@@ -295,11 +401,13 @@ async def ai_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 
+    # Ban check
+
     if uid in banned:
 
         await update.message.reply_text(
 
-            "❌ أنت محظور."
+            "❌ أنت محظور من استخدام البوت."
 
         )
 
@@ -307,9 +415,12 @@ async def ai_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 
 
+    # Memory create
+
     if uid not in memory:
 
         memory[uid] = []
+
 
 
     memory[uid].append({
@@ -324,21 +435,28 @@ async def ai_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     history = memory[uid][-10:]
 
 
+    # Groq API
+
     url = "https://api.groq.com/openai/v1/chat/completions"
 
 
     headers = {
 
-        "Authorization": f"Bearer {GROQ_KEY}",
+        "Authorization":
+        f"Bearer {GROQ_API_KEY}",
 
-        "Content-Type": "application/json"
+        "Content-Type":
+        "application/json"
 
     }
 
 
+
     data = {
 
-        "model": "llama-3.3-70b-versatile",
+        "model":
+        "llama-3.3-70b-versatile",
+
 
         "messages": [
 
@@ -348,9 +466,9 @@ async def ai_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
                 "content":
 
-                "أنت DILHUX AI PRO. "
+                "أنت DILHUX AI PRO V3. "
                 "أجب باللغة العربية فقط. "
-                "كن مساعداً ذكياً ومهذباً."
+                "كن ذكياً ومهذباً."
 
             }
 
@@ -359,9 +477,10 @@ async def ai_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     }
 
 
+
     try:
 
-        r = requests.post(
+        response = requests.post(
 
             url,
 
@@ -374,15 +493,23 @@ async def ai_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
 
-        result = r.json()
+        result = response.json()
 
 
         answer = result["choices"][0]["message"]["content"]
 
 
+
     except Exception as e:
 
-        answer = "خطأ:\n" + str(e)
+
+        answer = (
+
+            "حدث خطأ في الذكاء الاصطناعي:\n"
+
+            + str(e)
+
+        )
 
 
 
@@ -395,7 +522,7 @@ async def ai_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     })
 
 
-    save_file(
+    save_data(
 
         MEMORY_FILE,
 
@@ -404,20 +531,27 @@ async def ai_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
-    await update.message.reply_text(answer)# ==========================
+
+    await update.message.reply_text(
+
+        answer
+
+    )# ==========================
 # BOT START
 # ==========================
 
 
-app = Application.builder().token(
-    TELEGRAM_TOKEN
+application = Application.builder().token(
+    BOT_TOKEN
 ).build()
 
 
 
+# ==========================
 # COMMANDS
+# ==========================
 
-app.add_handler(
+application.add_handler(
     CommandHandler(
         "start",
         start
@@ -425,7 +559,7 @@ app.add_handler(
 )
 
 
-app.add_handler(
+application.add_handler(
     CommandHandler(
         "stats",
         stats
@@ -433,7 +567,7 @@ app.add_handler(
 )
 
 
-app.add_handler(
+application.add_handler(
     CommandHandler(
         "users",
         users_list
@@ -441,57 +575,117 @@ app.add_handler(
 )
 
 
-app.add_handler(
+application.add_handler(
     CommandHandler(
         "broadcast",
-        broadcast_start
+        broadcast
+    )
+)
+
+
+application.add_handler(
+    CommandHandler(
+        "ban",
+        ban
+    )
+)
+
+
+application.add_handler(
+    CommandHandler(
+        "unban",
+        unban
     )
 )
 
 
 
-# ADMIN BUTTON
+# ==========================
+# BUTTONS
+# ==========================
 
-app.add_handler(
+application.add_handler(
+
     MessageHandler(
+
         filters.Regex("👑 Admin Panel"),
+
         admin_panel
+
     )
+
 )
 
 
 
-# AI CHAT
+# ==========================
+# TEXT AI CHAT
+# ==========================
 
-app.add_handler(
+application.add_handler(
+
     MessageHandler(
+
         filters.TEXT & ~filters.COMMAND,
+
         ai_chat
+
     )
+
 )
+
+
+
+# ==========================
+# FLASK SERVER
+# ==========================
+
+
+web_app = Flask(__name__)
+
+
+@web_app.route("/")
+
+def home():
+
+    return "DILHUX AI PRO V3 Running!"
+
+
+
+def run_web():
+
+    port = int(
+        os.environ.get(
+            "PORT",
+            10000
+        )
+    )
+
+
+    web_app.run(
+
+        host="0.0.0.0",
+
+        port=port
+
+    )
+
+
+
+# Start Flask thread
+
+Thread(
+    target=run_web
+).start()
 
 
 
 print(
-    "DILHUX AI PRO V2 Running..."
+    "DILHUX AI PRO V3 Running..."
 )
 
 
 
-app.run_polling()
+# Start Telegram Bot
 
-from flask import Flask
-from threading import Thread
-import os
-
-app = Flask(__name__)
-
-@app.route("/")
-def home():
-    return "DILHUX AI PRO V2 Running!"
-
-def run_web():
-    port = int(os.environ.get("PORT", 8080))
-    app.run(host="0.0.0.0", port=port)
-
-Thread(target=run_web).start()
+application.run_polling()
