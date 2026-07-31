@@ -140,6 +140,7 @@ async def start(
         users
     )
 
+
     keyboard = [
         [
             InlineKeyboardButton(
@@ -149,16 +150,17 @@ async def start(
         ]
     ]
 
-   reply_markup =
-InlineKeyboardMarkup(keyboard)
 
-    await 
-update.message.reply_text(
+    reply_markup = InlineKeyboardMarkup(keyboard)
+
+
+    await update.message.reply_text(
 
         "🌹 دىلخۇش ئارامگاھىغا خۇش كەلدىڭىز\n\n"
         "تىزىملىكنى كۆرۈش ئۈچۈن تۆۋەندىكى كۇنۇپكىنى بېسىڭ:",
 
         reply_markup=reply_markup
+
     )
 
 
