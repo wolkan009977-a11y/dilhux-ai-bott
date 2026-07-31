@@ -11,8 +11,14 @@ from threading import Thread
 
 from flask import Flask
 
-from telegram import Update, ReplyKeyboardMarkup, KeyboardButton
 
+from telegram import (
+    Update,
+    ReplyKeyboardMarkup,
+    KeyboardButton,
+    InlineKeyboardButton,
+    InlineKeyboardMarkup
+)
 from telegram.ext import (
     Application,
     CommandHandler,
@@ -133,19 +139,25 @@ async def start(
     )
 
 
-    await update.message.reply_text(
+    keyboard = [
+    [
+        InlineKeyboardButton(
+            "🍽 دىلخۇش ئارامگاھى تىزىملىكى",
+            url="https://dilhux-aramgah-web.onrender.com/"
+        )
+    ]
+]
 
-        "مرحبا بك 👋\n\n"
+reply_markup = InlineKeyboardMarkup(keyboard)
 
-        "🤖 أنا DILHUX AI PRO V3\n"
 
-        "مساعد ذكاء اصطناعي ذكي.\n\n"
+await update.message.reply_text(
 
-        "يمكنك التحدث معي الآن.",
+    "🌹 دىلخۇش ئارامگاھىغا خۇش كەلدىڭىز\n\n"
+    "تىزىملىكنى كۆرۈش ئۈچۈن تۆۋەندىكى كۇنۇپكىنى بېسىڭ:",
 
-        reply_markup=menu()
-
-    )
+    reply_markup=reply_markup
+)
 
 
 # ==========================
