@@ -149,8 +149,7 @@ async def start(
         ]
     ]
 
-        reply_markup = InlineKeyboardMarkup(keyboard)
-
+ reply_markup = InlineKeyboardMarkup(keyboard)
 
     await 
 update.message.reply_text(
