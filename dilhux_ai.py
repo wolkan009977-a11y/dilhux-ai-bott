@@ -88,7 +88,9 @@ memory = load_data(MEMORY_FILE)
 
 banned = load_data(BANNED_FILE)
 
-broadcast_mode = {}# ==========================
+broadcast_mode = {}
+
+#==========================
 # MENU
 # ==========================
 
