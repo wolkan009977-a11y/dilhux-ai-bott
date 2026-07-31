@@ -138,26 +138,26 @@ async def start(
         users
     )
 
-
     keyboard = [
-    [
-        InlineKeyboardButton(
-            "🍽 دىلخۇش ئارامگاھى تىزىملىكى",
-            url="https://dilhux-aramgah-web.onrender.com/"
-        )
+        [
+            InlineKeyboardButton(
+                "🍽 دىلخۇش ئارامگاھى تىزىملىكى",
+                url="https://dilhux-aramgah-web.onrender.com/"
+            )
+        ]
     ]
-]
 
-reply_markup = InlineKeyboardMarkup(keyboard)
+    reply_markup = InlineKeyboardMarkup(keyboard)
 
 
-await update.message.reply_text(
+    await update.message.reply_text(
 
-    "🌹 دىلخۇش ئارامگاھىغا خۇش كەلدىڭىز\n\n"
-    "تىزىملىكنى كۆرۈش ئۈچۈن تۆۋەندىكى كۇنۇپكىنى بېسىڭ:",
+        "🌹 دىلخۇش ئارامگاھىغا خۇش كەلدىڭىز\n\n"
+        "تىزىملىكنى كۆرۈش ئۈچۈن تۆۋەندىكى كۇنۇپكىنى بېسىڭ:",
 
-    reply_markup=reply_markup
-)
+        reply_markup=reply_markup
+
+    )
 
 
 # ==========================
