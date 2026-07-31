@@ -141,13 +141,22 @@ async def start(
     )
 
 
-    keyboard = [
+        keyboard = [
+
         [
             InlineKeyboardButton(
                 "🍽 دىلخۇش ئارامگاھى تىزىملىكى",
                 url="https://dilhux-aramgah-web.onrender.com/"
             )
+        ],
+
+        [
+            InlineKeyboardButton(
+                "🍢 كاۋاپ زاكاز قىلىش",
+                url="https://t.me/abc099777"
+            )
         ]
+
     ]
 
 
@@ -157,7 +166,7 @@ async def start(
     await update.message.reply_text(
 
         "🌹 دىلخۇش ئارامگاھىغا خۇش كەلدىڭىز\n\n"
-        "تىزىملىكنى كۆرۈش ئۈچۈن تۆۋەندىكى كۇنۇپكىنى بېسىڭ:",
+        "تۆۋەندىكى كۇنۇپكىلاردىن تاللاڭ:",
 
         reply_markup=reply_markup
 
