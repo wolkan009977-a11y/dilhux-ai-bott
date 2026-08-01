@@ -5,7 +5,7 @@
 
 import os
 import json
-import requests
+from openai import OpenAI
 from datetime import datetime
 from threading import Thread
 
@@ -472,24 +472,25 @@ async def ai_chat(
     history = memory[uid][-10:]
 
 
-    # Groq API
-
-    url = "https://api.groq.com/openai/v1/chat/completions"
-
-
-    headers = {
-
-        "Authorization":
-        f"Bearer {GROQ_API_KEY}",
-
-        "Content-Type":
-        "application/json"
-
-    }
+    response = client.responses.create(
+    model="gpt-5.5",
+    input=[
+        {
+            "role": "system",
+            "content": (
+                "سەن DILHUX AI PRO V3. "
+                "ئىشلەتكۈچى قايسى تىلدا سۆزلىسە، شۇ تىلدا جاۋاب بەر. "
 
 
+                سەن DILHUX AI PRO V3.
+ئىشلەتكۈچى قايسى تىلدا سۆزلىسە شۇ تىلدا جاۋاب بەر.
+ئۇيغۇرچە بولسا ئۇيغۇر ئەرەب يېزىقىدا، تەبىئىي ۋە راۋان جاۋاب بەر.
+            )
+        }
+    ] + history
+)
 
-    data = {
+answer = response.output_text
 
         "model":
         "llama-3.3-70b-versatile",
@@ -499,9 +500,7 @@ async def ai_chat(
 
             {
 
-                "role": "system",
-
-                "content":
+                "
 
                 "أنت DILHUX AI PRO V3. "
                 "أجب باللغة العربية فقط. "
@@ -679,7 +678,7 @@ application.add_handler(
 
 
 web_app = Flask(__name__)
-
+ەە
 
 @web_app.route("/")
 
